@@ -4,7 +4,7 @@
   "description": "",
   "main": "meadowlark.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-crosspage.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-unit.js 2>/dev/null"
   },
   "repository": {
     "type": "git",
@@ -13,7 +13,12 @@
   "author": "Roma Bzoviy",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.14.0",
-    "express-handlebars": "^3.0.0"
+    "express": "~4.4.2",
+    "express3-handlebars": "~0.5.0",
+    "chai": "~1.9.1"
+  },
+  "devDependencies": {
+    "mocha": "~1.20.1",
+    "zombie": "~2.0.0-alpha31"
   }
 }
