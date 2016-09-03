@@ -4,6 +4,8 @@ var formidable = require('formidable');
 
 var app = express();
 
+var credentials = require('./credentials.js');
+
 // Установка механизма представления handlebars
 var handlebars = require('express3-handlebars').create({
     defaultLayout: 'main',
@@ -23,9 +25,20 @@ app.set('port', process.env.PORT || 3000);
 
 app.use(express.static(__dirname + '/public'));
 app.use(require('body-parser')());
-
 app.use(function (req, res, next) {
     res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1';
+    next();
+});
+app.use(require('cookie-parser')(credentials.cookieSecret));
+app.use(require('express-session')({
+    resave: false,
+    saveUninitialized: false,
+    secret: credentials.cookieSecret,
+}));
+
+app.use(function (req, res, next) {
+    res.locals.flash = req.session.flash;
+    delete  req.session.flash;
     next();
 });
 
@@ -65,6 +78,8 @@ app.use(function (req, res, next) {
 
 app.get('/', function (req, res) {
     res.render('home');
+    res.cookie('monster', 'nom nom');
+    res.cookie('signed_monster', 'nom nom', {signed: true});
 });
 
 app.get('/about', function (req, res) {
@@ -137,6 +152,56 @@ app.post('/contest/vacation-photo/:year/:month', function (req, res) {
         console.log(files);
         res.redirect(303, '/thank-you');
     })
+});
+
+function NewsletterSignup() {
+}
+
+NewsletterSignup.prototype.save = function (cb) {
+    cb();
+};
+
+var VALID_EMAIL_REGEX = new RegExp('^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@' +
+    '[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?' +
+    '(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$');
+
+app.post('/newsletter', function (req, res) {
+    var name = req.body.name || '',
+        email = req.body.email || '';
+
+    if (!email.match(VALID_EMAIL_REGEX)) {
+        if (req.xhr)
+            return res.json({error: 'Некорректный адрес электронной почты.'});
+        req.session.flash = {
+            type: 'danger',
+            intro: 'Ошибка проверки!',
+            message: 'Введенный вами адресс электронной почты некорректен.'
+        };
+        return res.redirect(303, '/newsletter/archive');
+    }
+
+    new NewsletterSignup({name: name, email: email}).save(function (err) {
+        if (err) {
+            if (req.xhr) return res.json({error: 'Ошибка базы данных'});
+            req.session.flash = {
+                type: 'danger',
+                intro: 'Ошибка базы данных!',
+                message: 'Произошла ошибка базы данных. Пожалуйста, попробуйте позднее'
+            };
+            return res.redirect(303, '/newsletter/archive');
+        }
+        if (req.xhr) return res.json({success: true});
+        req.session.flash = {
+            type: 'success',
+            intro: 'Спасибо!',
+            message: 'Вы были подписаны на информационный бюллетень.'
+        };
+        return res.redirect(303, '/newsletter/archive');
+    })
+});
+
+app.get('/newsletter/archive', function (req, res) {
+    res.render('newsletter/archive');
 });
 // пользовательская страница 404
 app.use(function (req, res) {
