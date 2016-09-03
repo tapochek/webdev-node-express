@@ -13,9 +13,11 @@
   "author": "Roma Bzoviy",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.15.2",
+    "chai": "~1.9.1",
     "express": "~4.4.2",
     "express3-handlebars": "~0.5.0",
-    "chai": "~1.9.1"
+    "formidable": "^1.0.17"
   },
   "devDependencies": {
     "mocha": "~1.20.1",
