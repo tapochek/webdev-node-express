@@ -6,6 +6,8 @@ var app = express();
 
 var credentials = require('./credentials.js');
 
+var emailService = require('./lib/email.js')(credentials);
+
 // Установка механизма представления handlebars
 var handlebars = require('express3-handlebars').create({
     defaultLayout: 'main',
@@ -159,6 +161,33 @@ var cartValidation = require('./lib/cartValidation.js');
 app.use(cartValidation.checkWaivers);
 app.use(cartValidation.checkGuestCounts);
 
+app.post('/cart/checkout', function (req, res) {
+    var cart = req.session.cart;
+    if (!cart) next(new Error('Корзина не существует.'));
+    var name = req.body.name || '',
+        email = req.body.email || '';
+    if (!email.match(VALID_EMAIL_REGEX))
+        return res.next(new Error('Некоооектный адрес электронной почты'));
+    cart.number = Math.random().toString().replace(/^0\.0*/, '');
+    cart.billing = {
+        name: name,
+        email: email
+    };
+
+    res.render('email/cart-thank-you', {layout: null, cart: cart}, function (err, html) {
+        if (err) console.log('ошибка в шаблоне письма');
+        mailTransport.sendMail({
+            from: '"Meadowlark Travel": info@meadowlarktravel.com',
+            to: cart.billing.email,
+            subject: 'Спасибо за заказ поездки в Meadowlark',
+            html: html,
+            generateTextFromHtml: true
+        }, function (err) {
+            if (err) console.err('Не могу отправить подтверждение: ' + err.stack);
+        });
+    });
+    res.render('cart-thank-you', {cart: cart});
+});
 
 function NewsletterSignup() {
 }
