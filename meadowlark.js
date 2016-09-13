@@ -25,6 +25,17 @@ app.set('view engine', 'handlebars');
 
 app.set('port', process.env.PORT || 3000);
 
+switch (app.get('env')) {
+    case 'development':
+        app.use(require('morgan')('dev'));
+        break;
+    case 'production':
+        app.use(require('express-logger')({
+            path: __dirname + '/log/requests.log'
+        }));
+        break;
+}
+
 app.use(express.static(__dirname + '/public'));
 app.use(require('body-parser')());
 app.use(function (req, res, next) {
@@ -252,6 +263,6 @@ app.use(function (err, req, res, next) {
 });
 
 app.listen(app.get('port'), function () {
-    console.log('Express запущен на http://localhost:' +
-        app.get('port') + '; нажмите Ctrl+C для завершения.');
+    console.log('Express запущено в режиме ' + app.get('env') +
+        ' на http://localhost:' + app.get('port') + '; нажмите Ctrl+C для завершения.');
 });
