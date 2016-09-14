@@ -25,6 +25,44 @@ app.set('view engine', 'handlebars');
 
 app.set('port', process.env.PORT || 3000);
 
+app.use(function (req, res, next) {
+    var domain = require('domain').create();
+    domain.on('error', function (err) {
+        console.error('ПЕРЕХВАЧЕНА ОШИБКА ДОМЕНА\n', err.stack);
+        try {
+            setTimeout(function () {
+                console.error(' Отказобезопасный останов.');
+                process.exit(1);
+            }, 5000);
+
+            var worker = require('cluster').worker;
+            if (worker) worker.disconnect();
+
+            server.close();
+
+            try {
+                next(err);
+            } catch (err) {
+                console.error('Сбой механизма обработки ошибок ' +
+                    'Express .\n', err.stack);
+                res.statusCode = 500;
+                res.setHeader('content-type', 'text/plain');
+                res.end('Ошибка сервера.');
+            }
+        } catch (err) {
+            console.error('Не могу отправить ответ 500.\n', err.stack);
+        }
+    });
+
+    domain.add(req);
+    domain.add(res);
+    domain.run(next);
+});
+
+var server = app.listen(app.get('port'), function () {
+    console.log('Слушаю на порту %d.', app.get('port'));
+});
+
 switch (app.get('env')) {
     case 'development':
         app.use(require('morgan')('dev'));
@@ -86,6 +124,18 @@ function getWeatherData() {
 app.use(function (req, res, next) {
     if (!res.locals.partials) res.locals.partials = {};
     res.locals.partials.weatherContext = getWeatherData();
+    next();
+});
+
+app.use(function (req, res, next) {
+    var cluster = require('cluster');
+    if (cluster.isWorker) console.log('Исполнитель %d получил запрос', cluster.worker.id);
+    next();
+});
+
+app.use(function (err, req, res, next) {
+    console.error(err.stack);
+    app.status(500).render(500);
     next();
 });
 
@@ -249,6 +299,13 @@ app.post('/newsletter', function (req, res) {
 app.get('/newsletter/archive', function (req, res) {
     res.render('newsletter/archive');
 });
+
+app.get('/epic-fail', function (req, res) {
+    process.nextTick(function () {
+        throw new Error('Бабах!');
+    })
+});
+
 // пользовательская страница 404
 app.use(function (req, res) {
     res.status(404);
@@ -262,7 +319,15 @@ app.use(function (err, req, res, next) {
     res.render('500');
 });
 
-app.listen(app.get('port'), function () {
-    console.log('Express запущено в режиме ' + app.get('env') +
-        ' на http://localhost:' + app.get('port') + '; нажмите Ctrl+C для завершения.');
-});
+function startServer() {
+    app.listen(app.get('port'), function () {
+        console.log('Express запущено в режиме ' + app.get('env') +
+            ' на http://localhost:' + app.get('port') + '; нажмите Ctrl+C для завершения.');
+    });
+}
+
+if (require.main === module) {
+    startServer();
+} else {
+    module.exports = startServer;
+}
