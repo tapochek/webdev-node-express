@@ -4,7 +4,7 @@
   "description": "",
   "main": "meadowlark.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-crosspage.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-unit.js 2>/dev/null"
+    "test": "./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-crosspage.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-unit.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-stress.js 2>/dev/null"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
     "express-session": "^1.14.1",
     "express3-handlebars": "~0.5.0",
     "formidable": "^1.0.17",
+    "loadtest": "^2.0.0",
     "morgan": "^1.7.0",
     "nodemailer": "^2.6.0"
   },

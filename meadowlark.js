@@ -25,44 +25,6 @@ app.set('view engine', 'handlebars');
 
 app.set('port', process.env.PORT || 3000);
 
-app.use(function (req, res, next) {
-    var domain = require('domain').create();
-    domain.on('error', function (err) {
-        console.error('ПЕРЕХВАЧЕНА ОШИБКА ДОМЕНА\n', err.stack);
-        try {
-            setTimeout(function () {
-                console.error(' Отказобезопасный останов.');
-                process.exit(1);
-            }, 5000);
-
-            var worker = require('cluster').worker;
-            if (worker) worker.disconnect();
-
-            server.close();
-
-            try {
-                next(err);
-            } catch (err) {
-                console.error('Сбой механизма обработки ошибок ' +
-                    'Express .\n', err.stack);
-                res.statusCode = 500;
-                res.setHeader('content-type', 'text/plain');
-                res.end('Ошибка сервера.');
-            }
-        } catch (err) {
-            console.error('Не могу отправить ответ 500.\n', err.stack);
-        }
-    });
-
-    domain.add(req);
-    domain.add(res);
-    domain.run(next);
-});
-
-var server = app.listen(app.get('port'), function () {
-    console.log('Слушаю на порту %d.', app.get('port'));
-});
-
 switch (app.get('env')) {
     case 'development':
         app.use(require('morgan')('dev'));
@@ -138,6 +100,44 @@ app.use(function (err, req, res, next) {
     app.status(500).render(500);
     next();
 });
+
+app.use(function (req, res, next) {
+    var domain = require('domain').create();
+    domain.on('error', function (err) {
+        console.error('ПЕРЕХВАЧЕНА ОШИБКА ДОМЕНА\n', err.stack);
+        try {
+            setTimeout(function () {
+                console.error(' Отказобезопасный останов.');
+                process.exit(1);
+            }, 5000);
+
+            var worker = require('cluster').worker;
+            if (worker) worker.disconnect();
+
+            server.close();
+
+            try {
+                next(err);
+            } catch (err) {
+                console.error('Сбой механизма обработки ошибок ' +
+                    'Express .\n', err.stack);
+                res.statusCode = 500;
+                res.setHeader('content-type', 'text/plain');
+                res.end('Ошибка сервера.');
+            }
+        } catch (err) {
+            console.error('Не могу отправить ответ 500.\n', err.stack);
+        }
+    });
+
+    domain.add(req);
+    domain.add(res);
+    domain.run(next);
+});
+
+/*var server = app.listen(app.get('port'), function () {
+ console.log('Слушаю на порту %d.', app.get('port'));
+ });*/
 
 app.get('/', function (req, res) {
     res.render('home');
