@@ -7,7 +7,7 @@ var vacationSchema = mongoose.Schema({
     description: String,
     priceInCents: Number,
     tags: [String],
-    fnSeason: Boolean,
+    inSeason: Boolean,
     available: Boolean,
     requiresWaiver: Boolean,
     maximumGuests: Number,
