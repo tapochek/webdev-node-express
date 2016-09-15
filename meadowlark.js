@@ -208,6 +208,79 @@ admin.get('/users', function (req, res) {
 
 require('./routes')(app);
 
+// api
+
+var Attraction = require('./models/attraction');
+
+var rest = require('connect-rest');
+
+app.get('/attractions', function (req, res, cb) {
+    Attraction.find({approved: true}, function (err, attractions) {
+        if (err) return cb({error: 'Внутренняя ошибка'});
+        cb(null, attractions.map(function (a) {
+            return {
+                name: a.name,
+                id: a._id,
+                description: a.description,
+                location: a.location
+            }
+        }))
+    })
+});
+
+app.post('/attraction', function (req, res, cb) {
+    var a = new Attraction({
+        name: req.body.name,
+        description: req.body.description,
+        location: {
+            lat: req.body.lat,
+            lng: req.body.lng
+        },
+        history: {
+            event: 'created',
+            email: req.body.email,
+            date: new Date()
+        },
+        approved: false
+    });
+
+    a.save(function (err, a) {
+        if (err) return cb({error: 'Невозможно добавить достопримечательность'});
+        cb(null, {id: a._id});
+    });
+});
+
+app.get('/attraction/:id', function (req, res, cb) {
+    Attraction.findById(req.params.id, function (err, a) {
+        if (err) return cb({error: 'Невозможно извлечь достопримечательность'});
+        cb(null, {
+            name: a.name,
+            id: a._id,
+            description: a.description,
+            location: a.location
+        });
+    });
+});
+
+// API configuration
+var apiOptions = {
+    context: '/',
+    domain: require('domain').create()
+};
+
+apiOptions.domain.on('error', function (err) {
+    console.log('API domain error.\n', err.stack);
+    setTimeout(function () {
+        console.log('Остановка сервера после ошибки домен API.');
+        process.exit(1);
+    }, 5000);
+    server.close();
+    var worker = require('cluster').worker;
+    if (worker) worker.disconnect();
+});
+
+app.use(vhost('api.*', rest.rester(apiOptions)));
+
 var autoViews = {};
 
 app.use(function (req, res, next) {

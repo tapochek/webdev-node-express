@@ -4,7 +4,7 @@
   "description": "",
   "main": "meadowlark.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-crosspage.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-unit.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-stress.js 2>/dev/null"
+    "test": "./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-crosspage.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-unit.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-stress.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-api.js 2>/dev/null"
   },
   "repository": {
     "type": "git",
@@ -16,6 +16,7 @@
     "body-parser": "^1.15.2",
     "chai": "~1.9.1",
     "connect": "^2.30.2",
+    "connect-rest": "^2.8.5",
     "cookie-parser": "^1.4.3",
     "express": "~4.4.2",
     "express-logger": "0.0.3",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "mocha": "~1.20.1",
     "mongoose": "^4.6.0",
+    "restler": "^3.4.0",
     "zombie": "~2.0.0-alpha31"
   }
 }
