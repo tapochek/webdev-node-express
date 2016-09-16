@@ -2,6 +2,7 @@ var express = require('express');
 var fortune = require('./lib/fortune.js');
 var formidable = require('formidable');
 var mongoose = require('mongoose');
+var fs = require('fs');
 
 var app = express();
 
@@ -190,7 +191,7 @@ function getWeatherData() {
                 temp: '55.0 F (12.8 C)'
             }
         ]
-    }
+    };
 }
 
 app.use(function (req, res, next) {
@@ -227,7 +228,7 @@ var Attraction = require('./models/attraction');
 
 var rest = require('connect-rest');
 
-app.get('/attractions', function (req, res, cb) {
+rest.get('/attractions', function (req, res, cb) {
     Attraction.find({approved: true}, function (err, attractions) {
         if (err) return cb({error: 'Внутренняя ошибка'});
         cb(null, attractions.map(function (a) {
@@ -236,12 +237,12 @@ app.get('/attractions', function (req, res, cb) {
                 id: a._id,
                 description: a.description,
                 location: a.location
-            }
-        }))
-    })
+            };
+        }));
+    });
 });
 
-app.post('/attraction', function (req, res, cb) {
+rest.post('/attraction', function (req, res, cb) {
     var a = new Attraction({
         name: req.body.name,
         description: req.body.description,
@@ -263,7 +264,7 @@ app.post('/attraction', function (req, res, cb) {
     });
 });
 
-app.get('/attraction/:id', function (req, res, cb) {
+rest.get('/attraction/:id', function (req, res, cb) {
     Attraction.findById(req.params.id, function (err, a) {
         if (err) return cb({error: 'Невозможно извлечь достопримечательность'});
         cb(null, {
@@ -292,7 +293,7 @@ apiOptions.domain.on('error', function (err) {
     if (worker) worker.disconnect();
 });
 
-//app.use(vhost('api.*', rest.rester(apiOptions)));
+app.use(require('vhost')('api.*', rest.rester(apiOptions)));
 
 var autoViews = {};
 
@@ -305,7 +306,7 @@ app.use(function (req, res, next) {
         autoViews[path] = path.replace('/^\//', '');
         return res.render(autoViews[path]);
     }
-    next()
+    next();
 });
 
 // пользовательская страница 404

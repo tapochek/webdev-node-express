@@ -4,7 +4,8 @@ var main = require('./handlers/main.js'),
     cart = require('./handlers/cart.js'),
     cartValidation = require('./lib/cartValidation.js'),
     contact = require('./handlers/contact.js'),
-    samples = require('./handlers/sample.js');
+    samples = require('./handlers/sample.js'),
+    tours = require('./handlers/tours.js');
 
 module.exports = function (app) {
 
@@ -42,4 +43,8 @@ module.exports = function (app) {
     app.get('/nursery-rhyme', samples.nurseryRhyme);
     app.get('/data/nursery-rhyme', samples.nurseryRhymeData);
     app.get('/epic-fail', samples.epicFail);
+
+    app.get('/tours/hood-river', tours.hoodRiver);
+    app.get('/tours/oregon-coast', tours.oregonCoast);
+    app.get('/tours/request-group-rate', tours.requestGroupRate);
 };

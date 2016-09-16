@@ -15,19 +15,19 @@ suite('Api tests', function () {
         email: 'test@meadowlarktravel.com'
     };
 
-    var base = 'http://localhost:3000';
+    var base = 'http://api.localhost:3000';
 
     test('проверка возможности извлечения достопримечательности',
         function (done) {
-            rest.post(base + '/api/attraction', {data: attraction}).on('success',
+            rest.post(base + '/attraction', {data: attraction}).on('success',
                 function (data) {
-                    rest.get(base + '/api/attraction/' + data.id).on('success',
+                    rest.get(base + '/attraction/' + data.id).on('success',
                         function (data) {
                             assert(data.name === attraction.name);
                             assert(data.description === attraction.description);
                             done();
-                        })
-                })
+                        });
+                });
         }
-    )
+    );
 });

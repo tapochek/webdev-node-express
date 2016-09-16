@@ -13,6 +13,6 @@ suite('Стрессовые тесты', function () {
             expect(!err);
             expect(result.totalTimeSeconds < 1);
             done();
-        })
-    })
+        });
+    });
 });

@@ -1,7 +1,7 @@
 {
   "name": "webdev-node-express",
   "version": "1.0.0",
-  "description": "",
+  "description": "Sample website for Web Development with Node and Express (O'Reilly).",
   "main": "meadowlark.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-crosspage.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-unit.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-stress.js 2>/dev/null && ./node_modules/mocha/bin/mocha -u tdd -R spec qa/tests-api.js 2>/dev/null"
@@ -16,7 +16,7 @@
     "body-parser": "^1.15.2",
     "chai": "~1.9.1",
     "connect": "^2.30.2",
-    "connect-rest": "^2.8.5",
+    "connect-rest": "^0.9.12",
     "cookie-parser": "^1.4.3",
     "express": "~4.4.2",
     "express-logger": "0.0.3",
@@ -43,7 +43,7 @@
     "grunt-hashres": "^0.4.1",
     "grunt-lint-pattern": "^0.1.4",
     "mocha": "~1.20.1",
-    "restler": "^3.4.0",
+    "restler": "^3.2.2",
     "zombie": "~2.0.0-alpha31"
   }
 }

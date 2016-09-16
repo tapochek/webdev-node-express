@@ -20,12 +20,13 @@ module.exports = function (grunt) {
             all: {src: 'qa/tests-*.js', options: {ui: 'tdd'},}
         },
         jshint: {
+            options: {"-W002": true},
             app: ['meadowlark.js', 'public/js/**/*.js', 'lib/**/*.js'],
             qa: ['Gruntfile.js', 'public/qa/**/*.js', 'qa/**/*.js'],
         },
-        exec: {
+        /*exec: {
             linkchecker: {cmd: 'linkchecker --ignore-url=\'!^(https?:)\/\/localhost\b\' --ignore-url=/cart/add --no-warnings http://localhost:3000'}
-        },
+         },*/
         less: {
             development: {
                 options: {
@@ -117,6 +118,6 @@ module.exports = function (grunt) {
     });
 
     // register tasks
-    grunt.registerTask('default', ['cafemocha', 'jshint', 'exec', 'lint_pattern']);
+    grunt.registerTask('default', ['cafemocha', 'jshint', /*'exec',*/ 'lint_pattern']);
     grunt.registerTask('static', ['less', 'cssmin', 'uglify', 'hashres']);
 };
