@@ -24,6 +24,7 @@
     "express3-handlebars": "~0.5.0",
     "formidable": "^1.0.17",
     "loadtest": "^2.0.0",
+    "mongoose": "^4.6.0",
     "morgan": "^1.7.0",
     "nodemailer": "^2.6.0",
     "q": "^1.4.1",
@@ -31,8 +32,16 @@
     "vhost": "^3.0.2"
   },
   "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-cafe-mocha": "^0.1.12",
+    "grunt-contrib-cssmin": "^0.10.0",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-less": "^0.11.3",
+    "grunt-contrib-uglify": "^0.5.1",
+    "grunt-exec": "^0.4.5",
+    "grunt-hashres": "^0.4.1",
+    "grunt-lint-pattern": "^0.1.4",
     "mocha": "~1.20.1",
-    "mongoose": "^4.6.0",
     "restler": "^3.4.0",
     "zombie": "~2.0.0-alpha31"
   }

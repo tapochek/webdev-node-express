@@ -17,6 +17,9 @@ var handlebars = require('express3-handlebars').create({
             if (!this._sections) this._sections = {};
             this._sections[name] = options.fn(this);
             return null;
+        },
+        static: function (name) {
+            return require('./lib/static.js').map(name);
         }
     }
 });
@@ -196,6 +199,16 @@ app.use(function (req, res, next) {
     next();
 });
 
+var static = require('./lib/static.js').map;
+
+app.use(function (req, res, next) {
+    var now = new Date();
+    res.locals.logoImage = now.getMonth() == 11 && now.getDate() == 19 ?
+        static('/img/logo_bud_clark.png') :
+        static('/img/logo.png');
+    next();
+});
+
 var admin = express.Router();
 app.use(require('vhost')('admin.*', admin));
 
@@ -279,7 +292,7 @@ apiOptions.domain.on('error', function (err) {
     if (worker) worker.disconnect();
 });
 
-app.use(vhost('api.*', rest.rester(apiOptions)));
+//app.use(vhost('api.*', rest.rester(apiOptions)));
 
 var autoViews = {};
 
