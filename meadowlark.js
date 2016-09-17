@@ -3,6 +3,7 @@ var fortune = require('./lib/fortune.js');
 var formidable = require('formidable');
 var mongoose = require('mongoose');
 var fs = require('fs');
+var https = require('https');
 
 var app = express();
 
@@ -84,6 +85,11 @@ app.use(require('express-session')({
     secret: credentials.cookieSecret,
     store: sessionStore
 }));
+app.use(require('csurf')());
+app.use(function (req, res, next) {
+    res.locals._csrfToken = req.csrfToken();
+    next();
+});
 app.use(express.static(__dirname + '/public'));
 app.use(require('body-parser')());
 
@@ -325,9 +331,13 @@ app.use(function (err, req, res, next) {
 var server;
 
 function startServer() {
-    app.listen(app.get('port'), function () {
-        console.log('Express запущено в режиме ' + app.get('env') +
-            ' на http://localhost:' + app.get('port') + '; нажмите Ctrl+C для завершения.');
+    var options = {
+        key: fs.readFileSync(__dirname + '/ssl/meadowlark.pem'),
+        cert: fs.readFileSync(__dirname + '/ssl/meadowlark.crt')
+    };
+
+    https.createServer(options, app).listen(app.get('port'), function () {
+        console.log('Express started in ' + app.get('env') + ' mode on port ' + app.get('port') + ' using HTTPS.');
     });
 }
 
