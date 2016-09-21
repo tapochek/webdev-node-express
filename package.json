@@ -46,7 +46,6 @@
     "grunt-hashres": "^0.4.1",
     "grunt-lint-pattern": "^0.1.4",
     "mocha": "~1.20.1",
-    "restler": "^3.2.2",
-    "zombie": "~2.0.0-alpha31"
+    "restler": "^3.2.2"
   }
 }
