@@ -15,7 +15,7 @@ suite('Api tests', function () {
         email: 'test@meadowlarktravel.com'
     };
 
-    var base = 'http://api.localhost:3000';
+    var base = 'https://api.localhost:3000';
 
     test('проверка возможности извлечения достопримечательности',
         function (done) {

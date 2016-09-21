@@ -4,7 +4,7 @@ var expect = require('chai').expect;
 suite('Стрессовые тесты', function () {
     test('Домашняя страница должна обрабатывать 50 запросов в секунду', function (done) {
         var options = {
-            url: 'http://localhost:3000',
+            url: 'https://localhost:3000',
             concurency: 4,
             maxRequests: 50
         };
