@@ -118,6 +118,6 @@ module.exports = function (grunt) {
     });
 
     // register tasks
-    grunt.registerTask('default', ['cafemocha', 'jshint', /*'exec',*/ 'lint_pattern']);
+    grunt.registerTask('default', ['jshint', /*'exec',*/ 'lint_pattern', 'cafemocha']);
     grunt.registerTask('static', ['less', 'cssmin', 'uglify', 'hashres']);
 };

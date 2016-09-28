@@ -299,6 +299,54 @@ apiOptions.domain.on('error', function (err) {
     if (worker) worker.disconnect();
 });
 
+var auth = require('./lib/auth')(app, {
+    baseUrl: process.env.BASE_URL,
+    providers: credentials.authProviders,
+    successRedirect: '/account',
+    failureRedirect: '/unauthorized'
+});
+
+auth.init();
+
+auth.registerRoutes();
+
+function customerOnly(req, res, next) {
+    if (req.user && req.user.role === 'customer') return next();
+    res.redirect(303, '/unauthorized');
+}
+
+function employeeOnly(req, res, next) {
+    if (req.user && req.user.role === 'employee') return next();
+    next('route');
+}
+
+function allow(roles) {
+    return function (req, res, next) {
+        if (req.user && roles.split(',').indexOf(req.user.role)!==-1) return next();
+        res.redirect(303, '/unauthorized');
+    };
+}
+
+app.get('/unauthorized', function (req, res) {
+    res.status(403).render('unauthorized');
+});
+
+app.get('/account', allow('customer,employee'), function (req, res) {
+    res.render('account');
+});
+
+app.get('/account/order-history', customerOnly, function (req, res) {
+    res.render('account/order-history');
+});
+
+app.get('/account/email-prefs', customerOnly, function (req, res) {
+    res.render('account/email-prefs');
+});
+
+app.get('/sales', employeeOnly, function (req, res) {
+    res.render('sales');
+});
+
 app.use(require('vhost')('api.*', rest.rester(apiOptions)));
 
 var autoViews = {};
