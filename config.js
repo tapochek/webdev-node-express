@@ -12,7 +12,7 @@ module.exports = {
         },
         clientCss: {
             main: {
-                file: '/css/meadowlark.min.631cdaf7.css',
+                file: '/css/meadowlark.min.2681d975.css',
                 contents: [
                     '/css/main.css',
                     '/css/cart.css',

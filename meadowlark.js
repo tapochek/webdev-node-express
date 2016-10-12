@@ -4,10 +4,17 @@ var formidable = require('formidable');
 var mongoose = require('mongoose');
 var fs = require('fs');
 var https = require('https');
+var Dealer = require('./models/dealer.js');
+var Q = require('q');
 
 var app = express();
 
 var credentials = require('./credentials.js');
+
+var twitter = require('./lib/twitter.js')({
+    consumerKey: credentials.twitter.consumerKey,
+    consumerSecret: credentials.twitter.consumerSecret
+});
 
 var emailService = require('./lib/email.js')(credentials);
 
@@ -161,6 +168,138 @@ Vacation.find(function (err, vacations) {
     }).save();
  });*/
 
+Dealer.find({}, function (err, dealers) {
+    if (dealers.length) return;
+
+    new Dealer({
+        name: 'Oregon Novelties',
+        address1: '912 NW Davis St',
+        city: 'Portland',
+        state: 'OR',
+        zip: '97209',
+        country: 'US',
+        phone: '503-555-1212',
+        active: true
+    }).save();
+
+    new Dealer({
+        name: 'Bruce\'s Bric-a-Brac',
+        address1: '159 Beeswax Ln',
+        city: 'Manzanita',
+        state: 'OR',
+        zip: '97209',
+        country: 'US',
+        phone: '503-555-1212',
+        active: true
+    }).save();
+
+    new Dealer({
+        name: 'Aunt Beru\'s Oregon Souveniers',
+        address1: '544 NE Emerson Ave',
+        city: 'Bend',
+        state: 'OR',
+        zip: '97701',
+        country: 'US',
+        phone: '503-555-1212',
+        active: true
+    }).save();
+
+    new Dealer({
+        name: 'Oregon Goodies',
+        address1: '1353 NW Beca Ave',
+        city: 'Corvallis',
+        state: 'OR',
+        zip: '97330',
+        country: 'US',
+        phone: '503-555-1212',
+        active: true
+    }).save();
+
+    new Dealer({
+        name: 'Oregon Grab-n-Fly',
+        address1: '7000 NE Airport Way',
+        city: 'Portland',
+        state: 'OR',
+        zip: '97219',
+        country: 'US',
+        phone: '503-555-1212',
+        active: true
+    }).save();
+});
+
+function dealersToGoogleMaps(dealers) {
+    var js = 'function addMarkers(map){\n' +
+        'var markers = [];\n' +
+        'var Marker = google.maps.Marker;\n' +
+        'var LatLng = google.maps.LatLng;\n';
+    dealers.forEach(function (d) {
+        var name = d.name.replace(/'/, '\\\'')
+            .replace(/\\/, '\\\\');
+        js += 'markers.push(new Marker({\n' +
+            '\tposition: new LatLng(' +
+            d.lat + ', ' + d.lng + '),\n' +
+            '\tmap: map,\n' +
+            '\ttitle: \'' + name.replace(/'/, '\\') + '\',\n' +
+            '}));\n';
+    });
+    js += '}';
+    return js;
+}
+
+var dealerCache = {
+    lastRefreshed: 0,
+    refreshInterval: 60 * 60 * 1000,
+    jsonUrl: '/dealers.json',
+    geocodeLimit: 2000,
+    geocodeCount: 0,
+    geocodeBegin: 0
+};
+
+dealerCache.jsonFile = __dirname +
+    '/public' + dealerCache.jsonUrl;
+
+function geocodeDealer(dealer) {
+    var addr = dealer.getAddress(' ');
+    if (addr === dealer.geocodedAddress) return;
+
+    if (dealerCache.geocodeCount >= dealerCache.geocodeLimit) {
+        if (Date.now() > dealerCache.geocodeCount + 24 * 60 * 60 + 1000) {
+            dealerCache.geocodeBegin = Date.now();
+            dealerCache.geocodeCount = 0;
+        } else {
+            return;
+        }
+    }
+    var geocode = require('./lib/geocode.js');
+    geocode(addr, function (err, coords) {
+        if (err) return console.log('Geocoding failure for ' + addr);
+        dealer.lat = coords.lat;
+        dealer.lng = coords.lng;
+        dealer.save();
+    });
+}
+
+dealerCache.refresh = function (cb) {
+    if (Date.now() > dealerCache.lastRefreshed + dealerCache.refreshInterval) {
+        Dealer.find({active: true}, function (err, dealers) {
+            if (err) return console.log('Error fetching dealers: ' + err);
+            dealers.forEach(geocodeDealer);
+
+            fs.writeFileSync(dealerCache.jsonFile, JSON.stringify(dealers));
+            cb();
+        });
+    }
+};
+
+function refreshDealerCacheForever() {
+    dealerCache.refresh(function () {
+        setTimeout(refreshDealerCacheForever, dealerCache.refreshInterval);
+    });
+}
+
+if (!fs.existsSync(dealerCache.jsonFile)) fs.writeFileSync(JSON.stringify([]));
+refreshDealerCacheForever();
+
 app.use(function (req, res, next) {
     res.locals.flash = req.session.flash;
     delete req.session.flash;
@@ -172,39 +311,89 @@ app.use(function (req, res, next) {
     next();
 });
 
-function getWeatherData() {
-    return {
+var getWeatherData = (function () {
+    // our weather cache
+    var c = {
+        refreshed: 0,
+        refreshing: false,
+        updateFrequency: 360000, // 1 hour
         locations: [
-            {
-                name: 'Портленд',
-                forecastUrl: 'http://www.wunderground.com/US/OR/Portland.html',
-                iconUrl: 'http://icons-ak.wxug.com/i/c/k/cloudy.gif',
-                weather: 'Сплошная облачность ',
-                temp: '54.1 F (12.3 C)'
-            },
-            {
-                name: 'Бенд',
-                forecastUrl: 'http://www.wunderground.com/US/OR/Bend.html',
-                iconUrl: 'http://icons-ak.wxug.com/i/c/k/partlycloudy.gif',
-                weather: 'Малооблачно',
-                temp: '55.0 F (12.8 C)'
-            },
-            {
-                name: 'Манзанита',
-                forecastUrl: 'http://www.wunderground.com/US/OR/Manzanita.html',
-                iconUrl: 'http://icons-ak.wxug.com/i/c/k/rain.gif',
-                weather: 'Небольшой дождь',
-                temp: '55.0 F (12.8 C)'
-            }
+            {name: 'Portland'},
+            {name: 'Bend'},
+            {name: 'Manzanita'}
         ]
     };
-}
+    return function () {
+        if (!c.refreshing && Date.now() > c.refreshed + c.updateFrequency) {
+            c.refreshing = true;
+            var promises = c.locations.map(function (loc) {
+                return Q.Promise(function (resolve) {
+                    var url = 'http://api.wunderground.com/api/' +
+                        credentials.WeatherUnderground.ApiKey +
+                        '/conditions/q/OR/' + loc.name + '.json';
+                    http.get(url, function (res) {
+                        var body = '';
+                        res.on('data', function (chunk) {
+                            body += chunk;
+                        });
+                        res.on('end', function () {
+                            body = JSON.parse(body);
+                            loc.forecastUrl = body.current_observation.forecast_url;
+                            loc.iconUrl = body.current_observation.icon_url;
+                            loc.weather = body.current_observation.weather;
+                            loc.temp = body.current_observation.temperature_string;
+                            resolve();
+                        });
+                    });
+                });
+            });
+            Q.all(promises).then(function () {
+                c.refreshing = false;
+                c.refreshed = Date.now();
+            });
+        }
+        return {locations: c.locations};
+    };
+})();
+
+getWeatherData();
+
 
 app.use(function (req, res, next) {
     if (!res.locals.partials) res.locals.partials = {};
     res.locals.partials.weatherContext = getWeatherData();
     next();
 });
+
+var topTweets = {
+    count: 10,
+    lastRefreshed: 0,
+    refreshInterval: 15 * 60 * 1000,
+    tweets: []
+};
+
+function getTopTweets(cb) {
+    if (Date.now() < topTweets.lastRefreshed + topTweets.refreshInterval)
+        return cb(topTweets.tweets);
+
+    twitter.search('#meadolarkTravel', topTweets.count, function (result) {
+        var formattedTweets = [];
+        var promises = [];
+        var embedOpts = {omit_script: 1};
+        result.statuses.forEach(function (status) {
+            var deferred = Q.defer();
+            twitter.embed(status.id_str, embedOpts, function (embed) {
+                formattedTweets.push(embed.html);
+                deferred.resolve();
+            });
+            promises.push(deferred.promise);
+        });
+        Q.all(promises).then(function () {
+            topTweets.lastRefreshed = Date.now();
+            cb(topTweets.tweets = formattedTweets);
+        });
+    });
+}
 
 var static = require('./lib/static.js').map;
 

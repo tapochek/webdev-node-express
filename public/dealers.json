@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "57fd819149494748fcacb8dc",
+    "name": "Oregon Novelties",
+    "address1": "912 NW Davis St",
+    "city": "Portland",
+    "state": "OR",
+    "zip": "97209",
+    "country": "US",
+    "phone": "503-555-1212",
+    "active": true,
+    "__v": 0,
+    "lat": 45.5244002,
+    "lng": -122.6804891
+  }
+]
